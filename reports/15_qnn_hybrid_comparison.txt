@@ -1,0 +1,16 @@
+========================================================================
+QNN HYBRID REPRODUCTION COMPARISON
+========================================================================
+Data file: data\processed\pretrain_dataset.csv
+Temporal split train/test: 9676/2419
+
+     model  accuracy  precision_macro  recall_macro  f1_macro                                        notes
+        LR  0.484498         0.444535      0.450113  0.444975                             temporal holdout
+       KNN  0.461761         0.407813      0.414254  0.402197                             temporal holdout
+    BP-MLP  0.397685         0.372162      0.372444  0.371895                             temporal holdout
+Hybrid-QNN  0.335676         0.336988      0.336185  0.331906 q=4, layers=1, hidden=24, best_val_f1=0.3341
+
+CSV saved: reports\15_qnn_hybrid_comparison.csv
+MD saved:  reports\15_qnn_hybrid_comparison.md
+QNN tuning CSV saved: reports\15_qnn_hybrid_tuning_trials.csv
+QNN tuning MD saved:  reports\15_qnn_hybrid_tuning_trials.md

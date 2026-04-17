@@ -1,0 +1,101 @@
+{
+  "experiment": "paper_like",
+  "folds": 10,
+  "seasons": [
+    "2010-2011",
+    "2011-2012",
+    "2012-2013"
+  ],
+  "features": [
+    "HomeTeam",
+    "AwayTeam",
+    "HS",
+    "AS",
+    "HST",
+    "AST",
+    "HC",
+    "AC",
+    "HF",
+    "AF",
+    "HY",
+    "AY",
+    "HR",
+    "AR",
+    "HTHG",
+    "HTAG"
+  ],
+  "results": [
+    {
+      "season": "2010-2011",
+      "feature_mode": "paper_like",
+      "accuracy": 0.5763157894736842,
+      "macro_f1": 0.510202803226059,
+      "support": 380,
+      "confusion": [
+        [
+          28,
+          23,
+          39
+        ],
+        [
+          10,
+          40,
+          61
+        ],
+        [
+          4,
+          24,
+          151
+        ]
+      ]
+    },
+    {
+      "season": "2011-2012",
+      "feature_mode": "paper_like",
+      "accuracy": 0.5368421052631579,
+      "macro_f1": 0.4247237112037589,
+      "support": 380,
+      "confusion": [
+        [
+          57,
+          8,
+          51
+        ],
+        [
+          26,
+          5,
+          62
+        ],
+        [
+          20,
+          9,
+          142
+        ]
+      ]
+    },
+    {
+      "season": "2012-2013",
+      "feature_mode": "paper_like",
+      "accuracy": 0.531578947368421,
+      "macro_f1": 0.4502141520612308,
+      "support": 380,
+      "confusion": [
+        [
+          38,
+          13,
+          55
+        ],
+        [
+          12,
+          17,
+          79
+        ],
+        [
+          7,
+          12,
+          147
+        ]
+      ]
+    }
+  ]
+}

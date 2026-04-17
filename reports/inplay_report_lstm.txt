@@ -1,0 +1,47 @@
+========================================================================
+LSTM REPORT - IN-PLAY
+========================================================================
+
+Data file: data\processed\inplay_dataset.csv
+Feature count: 89
+Checkpoint minutes: [10, 20, 30, 40, 45, 50, 60, 70, 80, 90]
+Tuning change: restored lighter in-play setup, no extra Draw reweighting, and attention pooling without forced final-state fusion
+Tuning refinement: slightly lower LR plus longer warmup to recover early-minute stability
+Train/Val/Test samples: 82240/14520/24190
+Train/Val/Test fixtures: 8224/1452/2419
+Device: cuda
+
+Model config:
+{'epochs': 180, 'batch_size': 128, 'lr': 0.0003, 'weight_decay': 0.0002, 'patience': 18, 'hidden_dim': 144, 'num_layers': 1, 'bidirectional': True, 'fuse_last_hidden': False, 'grad_clip': 0.6, 'warmup_epochs': 5, 'lr_scheduler_patience': 5, 'lr_scheduler_factor': 0.5, 'label_smoothing': 0.01, 'class_weight_power': 1.0, 'draw_boost': 1.0, 'lstm_dropout': 0.0, 'head_dropout': 0.15, 'attention_dropout': 0.02, 'static_hidden_dim': 0, 'attention_use_static': False, 'enable_val_bias_search': False, 'use_dual_head_fusion': False}
+
+Best epoch: 2
+Best val macro-F1: 0.6363
+Mean minute accuracy: 0.6432
+Test Macro-F1: 0.6305
+Test ROC-AUC (weighted ovr): 0.8336
+
+Classification report:
+               precision    recall  f1-score   support
+
+Away Win            0.70      0.66      0.68      7770
+Draw                0.43      0.55      0.48      6050
+Home Win            0.79      0.68      0.73     10370
+macro avg           0.64      0.63      0.63     24190
+weighted avg        0.67      0.64      0.65     24190
+Confusion matrix [A, D, H]:
+[[5113 1976  681]
+ [1438 3352 1260]
+ [ 771 2506 7093]]
+
+Accuracy by minute (test holdout):
+  minute=10: 0.4750
+  minute=20: 0.5076
+  minute=30: 0.5469
+  minute=40: 0.5672
+  minute=45: 0.5866
+  minute=50: 0.6131
+  minute=60: 0.6643
+  minute=70: 0.7218
+  minute=80: 0.7859
+  minute=90: 0.9632
+

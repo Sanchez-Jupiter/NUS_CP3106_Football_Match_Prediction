@@ -1,0 +1,9 @@
+.env
+
+# 数据和模型（太大）
+data/
+models/
+
+# 训练缓存
+catboost_info/
+__pycache__/

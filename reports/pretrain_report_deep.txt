@@ -1,0 +1,35 @@
+========================================================================
+DEEP LEARNING REPORT - Pre-match
+========================================================================
+
+Data file: data\processed\pretrain_dataset.csv
+Total samples: 12095
+Feature count: 76
+Split strategy: temporal last 20% by date
+Train/Val/Test: 8224/1452/2419
+
+Model config:
+{'epochs': 500, 'batch_size': 128, 'lr': 0.001, 'weight_decay': 0.0001, 'patience': 16}
+
+Best epoch: 23
+Best val macro-F1: 0.4599
+Test Accuracy: 0.4729
+Test Macro-F1: 0.4406
+Test ROC-AUC (weighted ovr): 0.6438
+
+Classification report:
+              precision    recall  f1-score   support
+
+    Away Win       0.49      0.44      0.46       777
+        Draw       0.27      0.26      0.27       605
+    Home Win       0.57      0.62      0.59      1037
+
+    accuracy                           0.47      2419
+   macro avg       0.44      0.44      0.44      2419
+weighted avg       0.47      0.47      0.47      2419
+
+Confusion matrix [A, D, H]:
+[[342 207 228]
+ [187 158 260]
+ [173 220 644]]
+

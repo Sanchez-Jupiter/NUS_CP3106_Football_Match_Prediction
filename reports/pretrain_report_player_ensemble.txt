@@ -1,0 +1,49 @@
+========================================================================
+PLAYER-ENHANCED PRE-MATCH ENSEMBLE REPORT
+========================================================================
+
+Data file: data\processed\pretrain_dataset.csv
+Paper inspiration: player-level + team-level features, dimensionality reduction, multi-model voting.
+Task adaptation: strict pre-match, three-class A/D/H prediction with temporal fixture holdout.
+
+Train/Val/Test fixtures: 8224/1452/2419
+Train/Val/Test samples: 8224/1452/2419
+Total feature count: 66
+Numeric/Categorical feature count: 62/4
+Post-encoding dimension: 375
+SVD dimension: 64
+
+Validation ranking (by F1-macro, then accuracy):
+- LogisticRegression: val_f1_macro=0.4299, val_accuracy=0.4649
+- ExtraTrees: val_f1_macro=0.4144, val_accuracy=0.4814
+- RandomForest: val_f1_macro=0.4040, val_accuracy=0.4966
+- KNN: val_f1_macro=0.3999, val_accuracy=0.4752
+
+Selected ensemble members: LogisticRegression, ExtraTrees, RandomForest
+Test Accuracy: 0.5019
+Test Macro-F1: 0.4329
+Test ROC-AUC (weighted ovr): 0.6562
+
+Classification report:
+              precision    recall  f1-score   support
+
+    Away Win       0.48      0.56      0.51       777
+        Draw       0.31      0.12      0.17       605
+    Home Win       0.55      0.68      0.61      1037
+
+    accuracy                           0.50      2419
+   macro avg       0.45      0.45      0.43      2419
+weighted avg       0.47      0.50      0.47      2419
+
+Confusion matrix [A, D, H]:
+[[434  79 264]
+ [229  72 304]
+ [246  83 708]]
+
+Player-centric features:
+h_key_players_started, a_key_players_started, h_key_players_absent, a_key_players_absent, h_key_players_form_avg_rating, a_key_players_form_avg_rating, h_key_players_form_avg_contrib, a_key_players_form_avg_contrib, h_starting11_avg_minutes_7d, a_starting11_avg_minutes_7d, h_starting11_avg_matches_7d, a_starting11_avg_matches_7d, diff_key_players_absent
+
+Team-context features:
+home_team, away_team, home_formation, away_formation, h_win_rate, a_win_rate, h_avg_gf, a_avg_gf, h_avg_ga, a_avg_ga, h_points_per_game, a_points_per_game, h_clean_sheet_rate, a_clean_sheet_rate, h_failed_to_score_rate, a_failed_to_score_rate, h_avg_first_half_gf, a_avg_first_half_gf, h_avg_second_half_gf, a_avg_second_half_gf, h_avg_yellow, a_avg_yellow, h_avg_red, a_avg_red, h2h_games, h2h_home_win_rate, h2h_draw_rate, h2h_home_goal_diff_avg, h_days_since_last_match, a_days_since_last_match, h_matches_last_7d, a_matches_last_7d, h_matches_last_14d, a_matches_last_14d, round_no, season_progress, h_rank, a_rank, h_gap_top, a_gap_top, h_gap_top4, a_gap_top4, h_gap_safety, a_gap_safety, importance_sum, importance_diff, diff_win_rate, diff_avg_gf, diff_avg_ga, diff_points_per_game, diff_second_half_gf, diff_days_since_last_match, diff_matches_last_7d
+
+Model saved to: models\pretrain_model_player_ensemble.pkl

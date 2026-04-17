@@ -1,0 +1,21 @@
+========================================================================
+BAYESIAN NETWORK EPL PAPER REPRODUCTION - PAPER_LIKE_WITH_FT_GOALS
+========================================================================
+
+Season: 2010-2011
+Accuracy: 0.8263
+Macro-F1: 0.8329
+Support: 380
+Confusion matrix [A, D, H]:
+[[ 76  14   0]
+ [  4 101   6]
+ [  0  42 137]]
+
+Weighted average accuracy: 0.8263
+Weighted average macro-F1: 0.8329
+
+Notes:
+- The paper's reported 75.09% average accuracy uses match-summary attributes, not strict pre-match features.
+- HS/HST/HC/HF/HY/HR and their away-team counterparts are only known after the match progresses.
+- HTHG/HTAG are halftime features, still not pre-match.
+- FTHG/FTAG are direct label leakage and should only be used to test whether the paper setup is leaky.

@@ -1,0 +1,48 @@
+========================================================================
+DEEP LEARNING REPORT - In-play
+========================================================================
+
+Data file: data\processed\inplay_dataset.csv
+Total samples: 120950
+Feature count: 89
+Split strategy: temporal last 20% by date
+Group holdout column: fixture_id
+Train/Val/Test: 82246/14514/24190
+
+Model config:
+{'epochs': 500, 'batch_size': 128, 'lr': 0.001, 'weight_decay': 0.0001, 'patience': 16}
+
+Best epoch: 1
+Best val macro-F1: 0.6561
+Test Accuracy: 0.6527
+Test Macro-F1: 0.6316
+Test ROC-AUC (weighted ovr): 0.8353
+
+Classification report:
+              precision    recall  f1-score   support
+
+    Away Win       0.67      0.69      0.68      7770
+        Draw       0.46      0.48      0.47      6050
+    Home Win       0.76      0.72      0.74     10370
+
+    accuracy                           0.65     24190
+   macro avg       0.63      0.63      0.63     24190
+weighted avg       0.66      0.65      0.65     24190
+
+Confusion matrix [A, D, H]:
+[[5390 1535  845]
+ [1639 2926 1485]
+ [ 966 1932 7472]]
+
+Accuracy by minute (test holdout):
+  10': 0.5089
+  20': 0.5221
+  30': 0.5502
+  40': 0.5837
+  45': 0.5961
+  50': 0.6193
+  60': 0.6635
+  70': 0.7210
+  80': 0.7871
+  90': 0.9748
+

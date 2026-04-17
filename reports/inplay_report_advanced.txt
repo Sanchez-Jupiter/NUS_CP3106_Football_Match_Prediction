@@ -1,0 +1,66 @@
+========================================================================
+ADVANCED REPORT - In-play
+========================================================================
+
+Data file: data\processed\inplay_dataset.csv
+Total samples: 120950
+Train samples: 96760
+Test samples: 24190
+Split strategy: temporal last 20% by date
+Group holdout column: fixture_id
+Feature count: 89
+
+Best model metrics:
+Accuracy=0.6423, F1-macro=0.6320, LogLoss=0.7633, ROC-AUC(w-ovr)=0.8370
+
+Classification report:
+              precision    recall  f1-score   support
+
+    Away Win       0.71      0.64      0.67      7770
+        Draw       0.42      0.59      0.49      6050
+    Home Win       0.80      0.68      0.73     10370
+
+    accuracy                           0.64     24190
+   macro avg       0.64      0.63      0.63     24190
+weighted avg       0.68      0.64      0.65     24190
+
+Confusion matrix:
+[[4948 2214  608]
+ [1355 3542 1153]
+ [ 667 2656 7047]]
+
+
+Accuracy by minute (test holdout):
+  10': 0.4399
+  20': 0.4816
+  30': 0.5337
+  40': 0.5647
+  45': 0.5949
+  50': 0.6197
+  60': 0.6676
+  70': 0.7309
+  80': 0.7979
+  90': 0.9921
+
+Top 20 features:
+                 feature  importance
+               goal_diff    0.194876
+      impact_score_total    0.141215
+         first_goal_team    0.063209
+              goals_home    0.050612
+              goals_away    0.049893
+min_since_last_goal_away    0.038198
+min_since_last_goal_home    0.032189
+              equalizers    0.022669
+                  minute    0.017305
+                  a_rank    0.016787
+            minute_ratio    0.016242
+  h2h_home_goal_diff_avg    0.015732
+                  h_rank    0.015295
+   impact_score_recent10    0.014351
+         importance_diff    0.012678
+      goal_diff_recent10    0.012375
+                a_avg_gf    0.011490
+        seg_impact_21_30    0.010872
+        seg_impact_11_20    0.010820
+          importance_sum    0.009515

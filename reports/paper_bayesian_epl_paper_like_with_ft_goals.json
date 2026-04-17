@@ -1,0 +1,53 @@
+{
+  "experiment": "paper_like_with_ft_goals",
+  "folds": 2,
+  "seasons": [
+    "2010-2011"
+  ],
+  "features": [
+    "HomeTeam",
+    "AwayTeam",
+    "HS",
+    "AS",
+    "HST",
+    "AST",
+    "HC",
+    "AC",
+    "HF",
+    "AF",
+    "HY",
+    "AY",
+    "HR",
+    "AR",
+    "HTHG",
+    "HTAG",
+    "FTHG",
+    "FTAG"
+  ],
+  "results": [
+    {
+      "season": "2010-2011",
+      "feature_mode": "paper_like_with_ft_goals",
+      "accuracy": 0.8263157894736842,
+      "macro_f1": 0.8329268891203464,
+      "support": 380,
+      "confusion": [
+        [
+          76,
+          14,
+          0
+        ],
+        [
+          4,
+          101,
+          6
+        ],
+        [
+          0,
+          42,
+          137
+        ]
+      ]
+    }
+  ]
+}
