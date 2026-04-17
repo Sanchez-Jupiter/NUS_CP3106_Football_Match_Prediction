@@ -4,6 +4,7 @@
 data/
 models/
 papers/
+Final Report/
 # 训练缓存
 catboost_info/
 __pycache__/
