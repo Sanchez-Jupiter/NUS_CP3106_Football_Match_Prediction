@@ -3,7 +3,7 @@
 # 数据和模型（太大）
 data/
 models/
-
+papers/
 # 训练缓存
 catboost_info/
 __pycache__/
