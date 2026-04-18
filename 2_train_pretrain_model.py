@@ -54,7 +54,7 @@ y = df['result'].copy()
 # Handle missing values
 X = X.fillna(0)
 
-label_encoder = LabelEncoder()
+label_encoder = LabelEncoder()# Encode target labels (A=0, D=1, H=2)
 y_encoded = label_encoder.fit_transform(y)
 
 print(f"\nFeatures shape: {X.shape}")
@@ -95,7 +95,7 @@ for count in class_counts:
 '''
 cb_model = CatBoostClassifier(
     iterations=2000,
-    depth=10,
+    depth=12,
     learning_rate=0.05,
     loss_function='MultiClass',
     eval_metric='Accuracy',
@@ -119,7 +119,7 @@ print("="*60)
 
 xgb_model = XGBClassifier(
     n_estimators=500,
-    max_depth=7,
+    max_depth=12,
     learning_rate=0.05,
     subsample=0.8,# Add subsampling to prevent overfitting
     colsample_bytree=0.8,# Add feature subsampling to prevent overfitting
