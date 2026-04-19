@@ -23,7 +23,6 @@ REPORT_DIR = Path("reports")
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Load and prepare data
 print("Loading in-play dataset...")
 df = pd.read_csv(DATA_FILE)
 
@@ -98,13 +97,16 @@ print("="*60)
 
 gb_model = GradientBoostingClassifier(
     n_estimators=200,
-    max_depth=4,
+    max_depth=8,
     learning_rate=0.05,
     subsample=0.8,
     random_state=42
 )
+# Gradient Boosting does not have built-in class_weight, so we compute sample weights
 from sklearn.utils.class_weight import compute_sample_weight
+# Compute sample weights to handle class imbalance
 sample_weights_inplay = compute_sample_weight('balanced', y_train)
+# Fit the model with sample weights
 gb_model.fit(X_train_scaled, y_train, sample_weight=sample_weights_inplay)
 
 gb_pred = gb_model.predict(X_test_scaled)
@@ -128,6 +130,7 @@ print(f"\n[OK] Best model: {best_model_name} (Accuracy: {max(rf_acc, gb_acc):.4f
 
 model_path = MODEL_DIR / "inplay_model.pkl"
 
+# Save the best model along with scaler and feature info
 with open(model_path, "wb") as f:
     pickle.dump({
         'model': best_model,
@@ -153,10 +156,12 @@ print(classification_report(y_test, final_pred, target_names=['Away Win', 'Draw'
 print("\nConfusion Matrix:")
 print(confusion_matrix(y_test, final_pred))
 
-
+# Calculate weighted ROC-AUC for multi-class if possible
 try:
     from sklearn.preprocessing import label_binarize
+    # Binarize the output for multi-class ROC-AUC
     y_test_bin = label_binarize(y_test, classes=['A', 'D', 'H'])
+    # Calculate ROC-AUC using the predicted probabilities
     roc_auc = roc_auc_score(y_test_bin, final_pred_proba, multi_class='ovr', average='weighted')
     print(f"\nWeighted ROC-AUC: {roc_auc:.4f}")
 except:
@@ -166,6 +171,7 @@ print("\n" + "="*60)
 print("Top 10 Most Important Features:")
 print("="*60)
 
+# For tree-based models, we can show feature importance
 if hasattr(best_model, 'feature_importances_'):
     importances = best_model.feature_importances_
     feature_importance = pd.DataFrame({
@@ -179,7 +185,7 @@ print("\n" + "="*60)
 print("Performance by Match Minute:")
 print("="*60)
 
-
+# Analyze accuracy by minute checkpoint
 test_df = df.iloc[X_test.index].copy()
 test_df['prediction'] = final_pred
 test_df['correct'] = test_df['prediction'] == y_test.values
