@@ -46,12 +46,11 @@ def _select_numeric_features(df: pd.DataFrame, exclude_cols: set[str]) -> List[s
     candidate_cols = [c for c in df.columns if c not in exclude_cols]
     return [c for c in candidate_cols if pd.api.types.is_numeric_dtype(df[c])]
 
-# The following functions are defined in the advanced training script for better modularity and clarity.
 def _temporal_holdout(
     df: pd.DataFrame,
-    date_col: str,
+    date_col: str,# The column name containing the date information
     test_frac: float = 0.2,
-    group_col: str | None = None,
+    group_col: str | None = None,# Optional column name for group-based holdout (e.g., fixture_id for in-play data)
 ) -> Tuple[pd.Series, pd.Series]:
     """
     Returns train_mask, test_mask.
@@ -63,20 +62,21 @@ def _temporal_holdout(
     tmp[date_col] = _to_datetime(tmp[date_col])
     # If no group_col, simply split by date
     if group_col is None:
-        tmp = tmp.sort_values(date_col)
+        tmp = tmp.sort_values(date_col)# Sort by date
         n_test = max(1, int(len(tmp) * test_frac))
         test_idx = tmp.tail(n_test).index
-        test_mask = df.index.isin(test_idx)
-        train_mask = ~test_mask
+        test_mask = df.index.isin(test_idx)# Mark the last 20% of rows as test
+        train_mask = ~test_mask# Mark the rest as train
         return pd.Series(train_mask, index=df.index), pd.Series(test_mask, index=df.index)
     # If group_col is provided, split by unique groups ordered by first date
     group_df = (
-        tmp[[group_col, date_col]]
-        .dropna(subset=[date_col])
-        .sort_values(date_col)
-        .drop_duplicates(subset=[group_col], keep="first")
+        tmp[[group_col, date_col]]# Get group and date columns
+        .dropna(subset=[date_col])# Drop rows with invalid dates
+        .sort_values(date_col)# Sort by date
+        .drop_duplicates(subset=[group_col], keep="first")# Keep only the first occurrence of each group to determine its date
     )
     n_test_groups = max(1, int(len(group_df) * test_frac))
+    # Get the last 20% of groups as test groups
     test_groups = set(group_df.tail(n_test_groups)[group_col].tolist())
 
     test_mask = df[group_col].isin(test_groups)
@@ -179,6 +179,8 @@ def _evaluate_model(model, X_test: pd.DataFrame, y_test: pd.Series) -> Dict[str,
 
     if hasattr(model, "predict_proba"):
         y_prob = model.predict_proba(X_test)
+        # Try to compute log loss and weighted OVR ROC-AUC, 
+        # but handle any exceptions gracefully (e.g., if a class is missing in y_test)
         try:
             metrics["log_loss"] = float(log_loss(y_test, y_prob, labels=model.classes_))
         except Exception:
@@ -198,7 +200,7 @@ def _evaluate_model(model, X_test: pd.DataFrame, y_test: pd.Series) -> Dict[str,
 
     return metrics
 
-
+# Helper function to format metrics for printing and reporting
 def _format_metrics(metrics: Dict[str, float]) -> str:
     return (
         f"Accuracy={metrics['accuracy']:.4f}, "
@@ -256,7 +258,8 @@ def train_advanced_model(
             best_name, best_model, best_metrics = name, model, metrics
             continue
 
-        # Primary criterion: higher macro F1; secondary: higher accuracy
+        # Primary criterion: higher macro F1; 
+        # secondary: higher accuracy
         if (
             metrics["f1_macro"] > best_metrics["f1_macro"]
             or (
@@ -275,14 +278,16 @@ def train_advanced_model(
     cm = confusion_matrix(y_test, y_pred_best)
 
     minute_accuracy_text = ""
+    # For in-play model, also compute accuracy by minute within the test holdout set (if minute column exists)
     if task_name.lower().startswith("in-play") and "minute" in df.columns:
-        eval_df = df.loc[test_mask].copy()
-        eval_df["pred"] = y_pred_best
+        eval_df = df.loc[test_mask].copy()# Create a DataFrame for the test holdout set
+        eval_df["pred"] = y_pred_best# Add predictions to the eval DataFrame
         minute_acc = eval_df.groupby("minute").apply(lambda t: accuracy_score(t["result"], t["pred"]))
+        # Format the minute accuracy into a text block for reporting
         minute_accuracy_text = "\nAccuracy by minute (test holdout):\n"
         for minute, acc in minute_acc.items():
             minute_accuracy_text += f"  {int(minute):2d}': {acc:.4f}\n"
-
+    # Save the best model and report
     payload = {
         "model": best_model,
         "model_name": best_name,
@@ -292,7 +297,7 @@ def train_advanced_model(
         "split_strategy": "temporal last 20% by date",
         "group_holdout": group_col,
     }
-
+    # Save the model using pickle
     with open(model_file, "wb") as f:
         pickle.dump(payload, f)
 
