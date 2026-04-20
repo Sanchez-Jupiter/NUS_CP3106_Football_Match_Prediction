@@ -26,12 +26,6 @@ import random
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple
-
-# Windows scientific stacks can load multiple OpenMP runtimes via PyTorch/NumPy/sklearn.
-# This guard allows the script to start instead of failing on duplicate libiomp initialization.
-# os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
-# os.environ.setdefault("OMP_NUM_THREADS", "1")
-
 import numpy as np
 import pandas as pd
 import torch
@@ -90,6 +84,10 @@ class MLPClassifier(nn.Module):
             nn.Dropout(0.25),
             nn.Linear(hidden1, hidden2),
             nn.BatchNorm1d(hidden2),
+            # Adding BatchNorm after the second hidden layer can help stabilize training and improve generalization, 
+            # especially as the network depth increases. 
+            # It normalizes the activations of the hidden layer, 
+            # which can mitigate issues like internal covariate shift and allow for higher learning rates.
             nn.ReLU(),
             nn.Dropout(0.20),
             nn.Linear(hidden2, num_classes),
@@ -166,18 +164,19 @@ def _standardize_fit_transform(
     X_test_s = (X_test - mean) / std
     return X_train_s, X_val_s, X_test_s, mean, std
 
+# Convert numpy arrays to PyTorch DataLoader
 def _to_loader(X: np.ndarray, y: np.ndarray, batch_size: int, shuffle: bool) -> DataLoader:
     x_tensor = torch.tensor(X, dtype=torch.float32)
     y_tensor = torch.tensor(y, dtype=torch.long)
     ds = TensorDataset(x_tensor, y_tensor)
     return DataLoader(ds, batch_size=batch_size, shuffle=shuffle)
 
-
+# Calculate macro F1 score from model logits and true labels
 def _macro_f1_from_logits(logits: torch.Tensor, y_true: np.ndarray) -> float:
     pred = logits.argmax(dim=1).cpu().numpy()
     return float(f1_score(y_true, pred, average="macro"))
 
-
+# Evaluate model probabilities on test set
 def _evaluate_probs(model: nn.Module, X: np.ndarray, device: torch.device) -> np.ndarray:
     model.eval()
     with torch.no_grad():
