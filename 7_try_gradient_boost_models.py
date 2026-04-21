@@ -100,10 +100,10 @@ def _temporal_holdout(
     train_mask = ~test_mask
     return train_mask, test_mask
 
-
+# Compute class weights to handle imbalance (H/D/A)
 def _compute_class_weights(y: np.ndarray) -> Dict[int, float]:
     """Compute sample weights for class imbalance."""
-    counts = np.bincount(y)
+    counts = np.bincount(y)# Count occurrences of each class
     weights = {}
     total = len(y)
     for i in range(len(counts)):
@@ -136,8 +136,8 @@ def train_xgboost(
         subsample=0.8,
         colsample_bytree=0.8,
         random_state=42,
-        tree_method="hist",  # GPU-compatible if CUDA available
-        device="cuda",  # Try GPU, falls back to CPU automatically
+        tree_method="hist",  
+        device="cuda",  
         objective="multi:softmax",
         num_class=3,
         early_stopping_rounds=16,
@@ -251,7 +251,7 @@ def train_one_task(
 
     X_df = df[feature_cols].fillna(0)
     y_raw = df["result"].astype(str)
-
+    # Map labels to integers for modeling
     label_to_idx = {label: i for i, label in enumerate(LABEL_ORDER)}
     idx_to_label = {i: label for label, i in label_to_idx.items()}
     y = y_raw.map(label_to_idx).values
