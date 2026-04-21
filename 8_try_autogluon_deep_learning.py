@@ -16,6 +16,7 @@ Outputs:
 from __future__ import annotations
 
 from pathlib import Path
+import shutil
 from typing import Dict, List, Tuple, Any
 import time
 
@@ -39,6 +40,11 @@ MODEL_DIR.mkdir(parents=True, exist_ok=True)
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 LABEL_ORDER = ["A", "D", "H"]
+SAFE_HYPERPARAMETERS = {
+    "NN_TORCH": {},
+    "RF": {},
+    "XT": {},
+}
 
 
 def _to_datetime(series: pd.Series) -> pd.Series:
@@ -48,6 +54,13 @@ def _to_datetime(series: pd.Series) -> pd.Series:
 def _select_numeric_features(df: pd.DataFrame, exclude_cols: set[str]) -> List[str]:
     candidate_cols = [c for c in df.columns if c not in exclude_cols]
     return [c for c in candidate_cols if pd.api.types.is_numeric_dtype(df[c])]
+
+
+def _reset_model_dir(model_dir: Path) -> None:
+    """Remove stale AutoGluon outputs so reruns start from a clean state."""
+    if model_dir.exists():
+        print(f"  Removing existing predictor directory: {model_dir}")
+        shutil.rmtree(model_dir)
 
 
 def _temporal_holdout(
@@ -111,13 +124,15 @@ def train_autogluon(
     test_data = X_test.copy()
     
     try:
+        _reset_model_dir(model_dir)
+
         # Create predictor
         predictor = TabularPredictor(
             label="result",
             path=str(model_dir),
             problem_type="multiclass",
             eval_metric="f1_macro",  # Optimize for macro-F1 (fairness across classes)
-            verbosity=1,
+            verbosity=2,
         )
         
         print(f"  Starting AutoGluon training...")
@@ -127,8 +142,11 @@ def train_autogluon(
         predictor.fit(
             train_data=train_data,
             time_limit=time_limit,
-            presets="best_quality",  # High-quality ensemble
-            num_bag_folds=5,  # Cross-validation
+            presets="medium_quality",  # More stable than best_quality when optional deps are missing
+            hyperparameters=SAFE_HYPERPARAMETERS,
+            num_bag_folds=3,
+            num_stack_levels=1,
+            num_gpus=0,
         )
         
         elapsed = time.time() - start_time
@@ -350,7 +368,7 @@ def main() -> None:
 
     report_text = "\n".join(report_lines)
     report_path = REPORT_DIR / "autogluon_comparison.txt"
-    with open(report_path, "w") as f:
+    with open(report_path, "w", encoding="utf-8") as f:
         f.write(report_text)
 
     print("\n" + "=" * 72)
