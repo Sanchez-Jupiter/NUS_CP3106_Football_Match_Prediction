@@ -11,31 +11,34 @@ Adaptation for this project:
 
 from __future__ import annotations
 
-import pickle
-from collections import Counter
-from pathlib import Path
+# ==================== 导入 ====================
+import pickle  # 模型序列化
+from collections import Counter  # 计数
+from pathlib import Path  # 路径处理
 
-import numpy as np
-import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.decomposition import TruncatedSVD
-from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
-from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, roc_auc_score
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
+import numpy as np  # 数值计算
+import pandas as pd  # 数据处理
+from sklearn.compose import ColumnTransformer  # 列转换器（对不同列应用不同变换）
+from sklearn.decomposition import TruncatedSVD  # 截断奇异值分解（降维）
+from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier  # 集成学习分类器
+from sklearn.impute import SimpleImputer  # 缺失值填充
+from sklearn.linear_model import LogisticRegression  # 逻辑回归分类器
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, roc_auc_score  # 评估指标
+from sklearn.neighbors import KNeighborsClassifier  # K最近邻分类器
+from sklearn.pipeline import Pipeline  # 数据处理管道
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler  # 预处理工具
 
 
-DATA_FILE = Path("data/processed/pretrain_dataset.csv")
-MODEL_DIR = Path("models")
-REPORT_DIR = Path("reports")
-MODEL_DIR.mkdir(parents=True, exist_ok=True)
-REPORT_DIR.mkdir(parents=True, exist_ok=True)
+# ==================== 路径和目录配置 ====================
+DATA_FILE = Path("data/processed/pretrain_dataset.csv")  # 训练数据文件
+MODEL_DIR = Path("models")  # 模型保存目录
+REPORT_DIR = Path("reports")  # 报告输出目录
+MODEL_DIR.mkdir(parents=True, exist_ok=True)  # 创建目录（如不存在）
+REPORT_DIR.mkdir(parents=True, exist_ok=True)  # 创建目录（如不存在）
 
-SEED = 42
-LABEL_ORDER = ["A", "D", "H"]
+# ==================== 全局配置常量 ====================
+SEED = 42  # 随机种子，确保结果可复现
+LABEL_ORDER = ["A", "D", "H"]  # 标签顺序：客队胜/平/主队胜
 
 PLAYER_FEATURES = [
     "h_key_players_started",

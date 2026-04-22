@@ -3,16 +3,34 @@ BAYESIAN NETWORK EPL PAPER REPRODUCTION - PAPER_LIKE_WITH_FT_GOALS
 ========================================================================
 
 Season: 2010-2011
-Accuracy: 0.8263
-Macro-F1: 0.8329
+Accuracy: 0.8474
+Macro-F1: 0.8561
 Support: 380
 Confusion matrix [A, D, H]:
 [[ 76  14   0]
- [  4 101   6]
- [  0  42 137]]
+ [  0 111   0]
+ [  0  44 135]]
 
-Weighted average accuracy: 0.8263
-Weighted average macro-F1: 0.8329
+Season: 2011-2012
+Accuracy: 0.8500
+Macro-F1: 0.8471
+Support: 380
+Confusion matrix [A, D, H]:
+[[ 96  20   0]
+ [  3  90   0]
+ [  1  33 137]]
+
+Season: 2012-2013
+Accuracy: 0.8184
+Macro-F1: 0.8222
+Support: 380
+Confusion matrix [A, D, H]:
+[[ 83  23   0]
+ [  3 105   0]
+ [  1  42 123]]
+
+Weighted average accuracy: 0.8386
+Weighted average macro-F1: 0.8418
 
 Notes:
 - The paper's reported 75.09% average accuracy uses match-summary attributes, not strict pre-match features.
