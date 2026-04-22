@@ -15,3 +15,5 @@ __pycache__/
 15_qnn_hybrid_comparison.py
 16_reproduce_attamills_prematch.py
 17_reproduce_berrar_deepfoot.py
+
+reports/
