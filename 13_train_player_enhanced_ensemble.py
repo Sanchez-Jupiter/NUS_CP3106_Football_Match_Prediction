@@ -223,7 +223,7 @@ def _evaluate_predictions(y_true: np.ndarray, y_pred: np.ndarray, y_prob: np.nda
         metrics["roc_auc_weighted_ovr"] = float("nan")
     return metrics
 
-
+# Majority vote with tiebreak using average probabilities across models
 def _majority_vote_with_tiebreak(predictions: list[np.ndarray], probabilities: list[np.ndarray], labels: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     pred_matrix = np.vstack(predictions)
     avg_prob = np.mean(np.stack(probabilities, axis=0), axis=0)
