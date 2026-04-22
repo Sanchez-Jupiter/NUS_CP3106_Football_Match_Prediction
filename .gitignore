@@ -8,3 +8,10 @@ Final Report/
 # 训练缓存
 catboost_info/
 __pycache__/
+11_reproduce_bayesian_epl_paper.py
+12_train_bayesian_prematch_strict.py
+13_train_player_enhanced_ensemble.py
+14_try_edge_ml_method.py
+15_qnn_hybrid_comparison.py
+16_reproduce_attamills_prematch.py
+17_reproduce_berrar_deepfoot.py
