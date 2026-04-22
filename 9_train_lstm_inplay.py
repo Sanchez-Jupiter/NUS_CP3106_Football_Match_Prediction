@@ -101,7 +101,6 @@ def _select_numeric_features(df: pd.DataFrame, exclude_cols: set[str]) -> List[s
     candidate_cols = [c for c in df.columns if c not in exclude_cols]
     return [c for c in candidate_cols if pd.api.types.is_numeric_dtype(df[c])]
 
-
 def _get_inplay_checkpoint_minutes(df: pd.DataFrame) -> List[int]:
     if "minute" not in df.columns:
         return DEFAULT_CHECKPOINT_MINUTES
@@ -145,7 +144,8 @@ def _train_val_split_fixture_ids(df_train: pd.DataFrame, val_frac: float = 0.15)
     val_ids = set(fixture_df.iloc[split:]["fixture_id"].tolist())
     return train_ids, val_ids
 
-
+# used for standardizing both sequence and tabular features, fitted on training data only 
+# and applied to val/test
 def _standardize_sequence_arrays(
     X_train: np.ndarray,
     X_val: np.ndarray,
@@ -161,7 +161,8 @@ def _standardize_sequence_arrays(
     X_test_s = (X_test - mean) / std
     return X_train_s, X_val_s, X_test_s, mean, std
 
-
+# similar to the above but for non-sequence tabular features 
+# (e.g. static features for pre-match model, or in-play features at each checkpoint)
 def _standardize_tabular_arrays(
     X_train: Optional[np.ndarray],
     X_val: Optional[np.ndarray],
@@ -175,7 +176,8 @@ def _standardize_tabular_arrays(
     std = np.where(std < 1e-8, 1.0, std)
     return (X_train - mean) / std, (X_val - mean) / std, (X_test - mean) / std, mean, std
 
-
+# helper function to build the input vector for a single pre-match observation 
+# (H2H or team form), used in the prematch sequence construction
 def _prematch_obs_vector(
     result_code: float,
     goal_diff: float,
@@ -221,19 +223,19 @@ class SequenceDataset(Dataset):
 class LSTMClassifier(nn.Module):
     def __init__(
         self,
-        input_dim: int,
-        static_input_dim: int = 0,
-        hidden_dim: int = 128,
-        num_layers: int = 2,
-        num_classes: int = 3,
-        bidirectional: bool = True,
-        fuse_last_hidden: bool = True,
-        lstm_dropout: float = 0.20,
-        head_dropout: float = 0.25,
-        attention_dropout: float = 0.10,
-        static_hidden_dim: int = 64,
-        attention_use_static: bool = False,
-        use_dual_head_fusion: bool = False,
+        input_dim: int,# feature dimensions input at each time step
+        static_input_dim: int = 0,# optional static features
+        hidden_dim: int = 128,# LSTM hidden state size (per direction if bidirectional)
+        num_layers: int = 2,# number of LSTM layers (stacked)
+        num_classes: int = 3,# number of output classes (e.g. 3 for H/D/A)
+        bidirectional: bool = True,# whether to use bidirectional LSTM (doubles hidden_dim for attention)
+        fuse_last_hidden: bool = True,# whether to concatenate the last hidden state to the attention context vector before classification
+        lstm_dropout: float = 0.20,# dropout rate between LSTM layers (0.0 if num_layers=1)
+        head_dropout: float = 0.25,# dropout rate in the classification head
+        attention_dropout: float = 0.10,# dropout rate in the attention mechanism
+        static_hidden_dim: int = 64,# if using static features, the hidden dimension of the static encoder (0 to disable)
+        attention_use_static: bool = False,# whether the attention mechanism should also attend over static features (if available) by concatenating them to the LSTM outputs at each time step
+        use_dual_head_fusion: bool = False,# whether to use dual head fusion for sequence and static features
     ):
         super().__init__()
         self.bidirectional = bidirectional
@@ -249,7 +251,7 @@ class LSTMClassifier(nn.Module):
             bidirectional=bidirectional,
             dropout=lstm_dropout if num_layers > 1 else 0.0,
         )
-        head_input_dim = hidden_dim * (2 if bidirectional else 1)
+        head_input_dim = hidden_dim * (2 if bidirectional else 1)# the dimension of the features input to the classification head (after attention and optional fusion with last hidden state)
         attention_input_dim = head_input_dim + (static_hidden_dim if self.attention_use_static else 0)
         self.attention = nn.Sequential(
             nn.Linear(attention_input_dim, head_input_dim),
@@ -347,29 +349,29 @@ class LSTMClassifier(nn.Module):
 
 @dataclass
 class TrainConfig:
-    epochs: int = 120
-    batch_size: int = 128
-    lr: float = 1e-3
-    weight_decay: float = 1e-4
-    patience: int = 16
-    hidden_dim: int = 128
-    num_layers: int = 2
-    bidirectional: bool = True
-    fuse_last_hidden: bool = True
-    grad_clip: float = 1.0
-    warmup_epochs: int = 0
-    lr_scheduler_patience: int = 4
-    lr_scheduler_factor: float = 0.5
-    label_smoothing: float = 0.0
-    class_weight_power: float = 1.0
-    draw_boost: float = 1.0
-    lstm_dropout: float = 0.20
-    head_dropout: float = 0.25
-    attention_dropout: float = 0.10
-    static_hidden_dim: int = 0
-    attention_use_static: bool = False
-    enable_val_bias_search: bool = False
-    use_dual_head_fusion: bool = False
+    epochs: int = 120 # maximum number of training epochs
+    batch_size: int = 128 # training batch size
+    lr: float = 1e-3 # learning rate for the optimizer
+    weight_decay: float = 1e-4 # L2 regularization weight decay
+    patience: int = 16 # number of epochs with no improvement after which training will be stopped
+    hidden_dim: int = 128 # hidden dimension of the LSTM
+    num_layers: int = 2 # number of LSTM layers
+    bidirectional: bool = True # whether to use bidirectional LSTM (doubles hidden_dim for attention)
+    fuse_last_hidden: bool = True # whether to concatenate the last hidden state to the attention context vector before classification
+    grad_clip: float = 1.0 # gradient clipping value
+    warmup_epochs: int = 0 # number of warmup epochs for learning rate scheduling
+    lr_scheduler_patience: int = 4 # patience for learning rate scheduler
+    lr_scheduler_factor: float = 0.5 # factor for learning rate scheduler
+    label_smoothing: float = 0.0 # label smoothing value
+    class_weight_power: float = 1.0 # power for class weighting
+    draw_boost: float = 1.0 # boost factor for draw class
+    lstm_dropout: float = 0.20 # dropout rate between LSTM layers (0.0 if num_layers=1)
+    head_dropout: float = 0.25 # dropout rate in the classification head
+    attention_dropout: float = 0.10 # dropout rate in the attention mechanism
+    static_hidden_dim: int = 0 # hidden dimension for static features
+    attention_use_static: bool = False # whether to use static features in attention
+    enable_val_bias_search: bool = False # whether to enable validation bias search
+    use_dual_head_fusion: bool = False # whether to use dual head fusion for sequence and static features
 
 
 def _build_task_config(task_name: str) -> TrainConfig:
@@ -428,12 +430,12 @@ def _build_task_config(task_name: str) -> TrainConfig:
 
 
 def build_sequence_samples(
-    df: pd.DataFrame,
-    feature_cols: List[str],
-    fixture_ids: set[int],
-    checkpoint_minutes: List[int],
+    df: pd.DataFrame,# input dataframe containing in-play data with one row per checkpoint
+    feature_cols: List[str],# list of feature columns to be used as input at each time step
+    fixture_ids: set[int],# set of fixture IDs to include in the samples (e.g. training or validation fixtures)
+    checkpoint_minutes: List[int],# list of checkpoint minutes to consider for each sequence
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    if not fixture_ids:
+    if not fixture_ids:# if no fixtures to include, return empty arrays with the correct shapes
         return (
             np.zeros((0, len(checkpoint_minutes), len(feature_cols)), dtype=np.float32),
             np.zeros(0, dtype=np.int64),
@@ -473,18 +475,18 @@ def build_sequence_samples(
 
 
 def build_prematch_h2h_sequence_samples(
-    df: pd.DataFrame,
-    fixture_ids: set[int],
-    static_feature_cols: Optional[List[str]] = None,
-    max_seq_len: int = PREMATCH_SEQ_LEN,
+    df: pd.DataFrame,# input dataframe containing pre-match data with one row per fixture, including historical match data for H2H and team form
+    fixture_ids: set[int],# set of fixture IDs to include in the samples (e.g. training or validation fixtures)
+    static_feature_cols: Optional[List[str]] = None,# optional list of static feature columns to include as additional input to the model (e.g. betting odds, team ratings, etc.)
+    max_seq_len: int = PREMATCH_SEQ_LEN,# maximum sequence length (number of historical matches) to include for each fixture; if a fixture has fewer historical matches, the sequence will be padded with zeros
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, Optional[np.ndarray]]:
     label_to_idx = {label: idx for idx, label in enumerate(LABEL_ORDER)}
     df_sorted = df.copy()
     df_sorted["date"] = _to_datetime(df_sorted["date"])
     df_sorted = df_sorted.sort_values("date")
 
-    pair_history: defaultdict[tuple[str, str], list[dict]] = defaultdict(list)
-    team_history: defaultdict[str, list[dict]] = defaultdict(list)
+    pair_history: defaultdict[tuple[str, str], list[dict]] = defaultdict(list)# history of past matches for each team pair, used to construct H2H sequences
+    team_history: defaultdict[str, list[dict]] = defaultdict(list)# history of past matches for each team, used to construct team form sequences
     samples_X = []
     samples_len = []
     samples_y = []
@@ -494,10 +496,10 @@ def build_prematch_h2h_sequence_samples(
     for row in df_sorted.itertuples(index=False):
         home_team = str(row.home_team)
         away_team = str(row.away_team)
-        pair_key = tuple(sorted((home_team, away_team)))
+        pair_key = tuple(sorted((home_team, away_team)))# the key for accessing the pair history, independent of home/away order
 
-        if int(row.fixture_id) in fixture_ids:
-            seq = np.zeros((max_seq_len, len(PREMATCH_SEQUENCE_FEATURES)), dtype=np.float32)
+        if int(row.fixture_id) in fixture_ids:# only construct samples for fixtures in the specified set (e.g. training or validation fixtures)
+            seq = np.zeros((max_seq_len, len(PREMATCH_SEQUENCE_FEATURES)), dtype=np.float32)# initialize the sequence array with zeros; it will be filled with historical match observations up to max_seq_len, and padded with zeros if there are fewer matches
             current_date = row.date
             candidates: list[tuple[pd.Timestamp, np.ndarray]] = []
 
@@ -531,7 +533,7 @@ def build_prematch_h2h_sequence_samples(
                     )
                 )
 
-            for hist in team_history[home_team][-PREMATCH_MAX_TEAM_FORM:]:
+            for hist in team_history[home_team][-PREMATCH_MAX_TEAM_FORM:]:# add historical matches for the home team, marked as source_home_form=1.0
                 days_ago = (current_date - hist["date"]).total_seconds() / 86400.0
                 candidates.append(
                     (
@@ -550,7 +552,7 @@ def build_prematch_h2h_sequence_samples(
                     )
                 )
 
-            for hist in team_history[away_team][-PREMATCH_MAX_TEAM_FORM:]:
+            for hist in team_history[away_team][-PREMATCH_MAX_TEAM_FORM:]:# add historical matches for the away team, marked as source_away_form=1.0
                 days_ago = (current_date - hist["date"]).total_seconds() / 86400.0
                 candidates.append(
                     (
@@ -569,7 +571,7 @@ def build_prematch_h2h_sequence_samples(
                     )
                 )
 
-            recent = sorted(candidates, key=lambda item: item[0])[-max_seq_len:]
+            recent = sorted(candidates, key=lambda item: item[0])[-max_seq_len:]# sort the candidate historical matches by date and take the most recent ones up to max_seq_len to fill the sequence; if there are fewer than max_seq_len, the remaining rows will stay as zeros (padded)
             if recent:
                 for idx, (_, obs) in enumerate(recent):
                     seq[idx] = obs
@@ -582,7 +584,7 @@ def build_prematch_h2h_sequence_samples(
             samples_len.append(seq_len)
             samples_y.append(label_to_idx[str(row.result)])
             samples_marker.append(0)
-            if samples_static is not None:
+            if samples_static is not None:# if static features are to be included, extract them from the current row and add to the samples; these features will be the same for all time steps in the sequence, so they are stored separately and can be fused in the model
                 static_values = np.array([float(getattr(row, col)) for col in static_feature_cols], dtype=np.float32)
                 samples_static.append(static_values)
 
